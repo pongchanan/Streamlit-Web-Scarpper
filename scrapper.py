@@ -8,13 +8,21 @@ import time
 
 st.markdown("<h1 style='text-align: center'>Web Scraper</h1>", unsafe_allow_html=True)
 
-image_urls = []
+# Initialize session state for search results
+if "image_urls" not in st.session_state:
+    st.session_state.image_urls = []
+if "link_urls" not in st.session_state:
+    st.session_state.link_urls = []
 
 with st.form("Search"):
     keyword = st.text_input("Enter your keyword")
     search = st.form_submit_button("Search")
-    
-    if search: 
+
+    if search:
+        # Clear previous results
+        st.session_state.image_urls = []
+        st.session_state.link_urls = []
+
         # Set up Selenium
         chrome_options = Options()
         chrome_options.add_argument("--headless")
@@ -32,38 +40,40 @@ with st.form("Search"):
 
         # Scrape image URLs
         try:
-            # Locate all image elements
             rows = driver.find_elements(By.CLASS_NAME, "I7e4t")  # Adjust if this class changes
             for row in rows:
                 figures = row.find_elements(By.TAG_NAME, 'figure')
                 for figure in figures:
                     try:
-                        # Locate the image element
+                        anchor = figure.find_element(By.TAG_NAME, 'a')
+                        st.session_state.link_urls.append(anchor.get_attribute('href'))
                         img = figure.find_elements(By.TAG_NAME, 'img')[1]  # Adjust index as needed
-                        # Extract the highest resolution URL from the 'src' attribute
-                        img_url = img.get_attribute('src')  
-                        image_urls.append(img_url)
+                        img_url = img.get_attribute('src')
+                        st.session_state.image_urls.append(img_url)
                     except Exception:
-                        pass  # Skip if the image isn't found
+                        pass
         except Exception as e:
             st.error(f"An error occurred: {e}")
 
-                
-        # Close the browser
         driver.quit()
         
-        if not image_urls:
+        if not st.session_state.image_urls:
             st.write("No images found. Please try a different keyword.")
-            
-place_holder = st.empty()
 
-if image_urls:
-    col1, col2 = place_holder.columns(2)   
-    st.write(f"Found {len(image_urls)} images for the keyword '{keyword}'")
-    counter = 0
-    for url in image_urls:
+# Display images with clickable links
+if st.session_state.image_urls:
+    col1, col2 = st.columns(2)
+    st.write(f"Found {len(st.session_state.image_urls)} images for the keyword '{keyword}'")
+    for counter, url in enumerate(st.session_state.image_urls):
         if counter % 2 == 0:
-            col1.image(url)  # Display the image in Streamlit
+            col1.image(url)
+            col1.markdown(
+                f"<a href='{st.session_state.link_urls[counter]}' target='_blank'>Download Image</a>", 
+                unsafe_allow_html=True
+            )
         else:
             col2.image(url)
-        counter += 1
+            col2.markdown(
+                f"<a href='{st.session_state.link_urls[counter]}' target='_blank'>Download Image</a>", 
+                unsafe_allow_html=True
+            )
