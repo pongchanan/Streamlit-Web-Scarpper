@@ -8,11 +8,13 @@ import time
 
 st.markdown("<h1 style='text-align: center'>Web Scraper</h1>", unsafe_allow_html=True)
 
+image_urls = []
+
 with st.form("Search"):
     keyword = st.text_input("Enter your keyword")
     search = st.form_submit_button("Search")
     
-    if search:
+    if search: 
         # Set up Selenium
         chrome_options = Options()
         chrome_options.add_argument("--headless")
@@ -29,7 +31,6 @@ with st.form("Search"):
         time.sleep(3)
 
         # Scrape image URLs
-        image_urls = []
         try:
             # Locate all image elements
             rows = driver.find_elements(By.CLASS_NAME, "I7e4t")  # Adjust if this class changes
@@ -50,11 +51,19 @@ with st.form("Search"):
                 
         # Close the browser
         driver.quit()
-
-        # Display results in Streamlit
-        if image_urls:
-            st.write(f"Found {len(image_urls)} images for the keyword '{keyword}'")
-            for url in image_urls:
-                st.image(url, width=300)  # Display the image in Streamlit
-        else:
+        
+        if not image_urls:
             st.write("No images found. Please try a different keyword.")
+            
+place_holder = st.empty()
+
+if image_urls:
+    col1, col2 = place_holder.columns(2)   
+    st.write(f"Found {len(image_urls)} images for the keyword '{keyword}'")
+    counter = 0
+    for url in image_urls:
+        if counter % 2 == 0:
+            col1.image(url)  # Display the image in Streamlit
+        else:
+            col2.image(url)
+        counter += 1
