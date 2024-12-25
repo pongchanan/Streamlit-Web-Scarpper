@@ -6,6 +6,11 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 
+st.set_page_config(
+    page_title="Web scrapper",
+    page_icon="👻"
+)
+
 st.markdown("<h1 style='text-align: center'>Web Scraper</h1>", unsafe_allow_html=True)
 
 # Initialize session state for search results
